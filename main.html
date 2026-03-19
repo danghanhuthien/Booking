@@ -184,6 +184,7 @@ tbody td { padding: 11px 14px; vertical-align: middle; white-space: nowrap; }
 .badge-final    { background: var(--purple-bg); color: var(--purple); }
 .badge-done     { background: #F0FDF4;          color: #166534;       }
 .badge-cancel   { background: var(--red-bg);    color: var(--red);    }
+.badge-purple   { background: var(--purple-bg); color: var(--purple); }
 .badge-default  { background: var(--surface2);  color: var(--muted);  }
 
 /* Action buttons in row */
@@ -563,6 +564,17 @@ async function loadMonth(month) {
   }
 }
 
+// Cột hiển thị trong bảng (đúng thứ tự)
+const TABLE_COLS = [
+  'BOOKING CODE','SALE','Trạng thái','Nhắc nhở','GUIDE','TT Tài xế',
+  'PTTY Hotel','BKK Hotel','ARR No.','Time',
+  'Ngày đến','Ngày đi','PAX','TWN','DBL','SGL','TRP','GUIDE ROOM',
+  'File RML','File JOB','NOTE','Bus','Seat',
+  'Ngày check in PTTY','Ngày check out PTTY','Số ngày PTTY',
+  'Ngày check in BKK','Ngày check out BKK','Số ngày BKK',
+  'Ngày check in BKK 2','Ngày check out BKK 2','Số ngày BKK 2'
+];
+
 // ── RENDER TABLE ──
 function renderTable(result) {
   const tbody   = document.getElementById('tableBody');
@@ -572,10 +584,8 @@ function renderTable(result) {
 
   document.getElementById('recordCount').textContent = rows.length + ' booking';
 
-  // Build thead động từ headers
-  // Luôn có cột action cuối
-  const skipCols = ['_rowIndex','_sheetName'];
-  const visCols  = headers.filter(h => !skipCols.includes(h) && h !== '');
+  // Chỉ hiện các cột có trong TABLE_COLS VÀ có trong headers thực tế của sheet
+  const visCols = TABLE_COLS.filter(c => headers.includes(c));
   theadTr.innerHTML = visCols.map(h =>
     `<th>${h}</th>`
   ).join('') + '<th></th>';
@@ -688,7 +698,7 @@ function buildForm(b) {
     const isNum  = ['pax','twn','dbl','sgl','trp','guide room','số đêm','seat'].some(k => lower.includes(k));
     const isNote = lower === 'note' || lower === 'ghi chú';
 
-    const STATUS_OPTIONS = ['New booking','Chờ confirm','Đã confirm','Final booking','Đã final booking','DONE','CANCEL'];
+    const STATUS_OPTIONS = ['New Booking','Pending Confirm','Confirmed','Booking Confirmed','Final Booking','Done','Cancel'];
     const isStatus = colName === 'Trạng thái';
     const isSale   = colName === 'SALE';
 
@@ -780,15 +790,16 @@ function doLogout() {
 function statusBadge(status) {
   const s = String(status || '').trim();
   const map = {
-    'New Booking':   ['badge-new',      'New Booking'],
-    'Chờ confirm':   ['badge-confirm',  'Chờ confirm'],
-    'Đã confirm':    ['badge-dconfirm', 'Đã confirm'],
-    'Final booking': ['badge-final',    'Final'],
-    'DONE':          ['badge-done',     'DONE'],
-    'CANCEL':        ['badge-cancel',   'CANCEL'],
+    'New Booking':      'badge-new',
+    'Pending Confirm':  'badge-confirm',
+    'Confirmed':        'badge-dconfirm',
+    'Booking Confirmed':'badge-final',
+    'Final Booking':    'badge-purple',
+    'Done':             'badge-done',
+    'Cancel':           'badge-cancel',
   };
-  const [cls, label] = map[s] || ['badge-default', s || '—'];
-  return `<span class="badge ${cls}">${label}</span>`;
+  const cls = map[s] || 'badge-default';
+  return `<span class="badge ${cls}">${s || '—'}</span>`;
 }
 
 function formatDate(val) {
