@@ -120,16 +120,16 @@ html, body { height: 100%; background: var(--bg); font-family: var(--font-sans);
 .btn-primary svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ── STATS ROW ── */
-.stats-row { padding: 0 28px 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+.stats-row { padding: 0 28px 18px; display: flex; gap: 10px; flex-wrap: wrap; }
 .stat-card {
-  flex: 1; min-width: 140px;
+  flex: 1; min-width: 100px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 18px;
+  padding: 12px 14px;
 }
-.stat-label { font-size: 11.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-.stat-value { font-size: 24px; font-family: var(--font-serif); font-weight: 400; }
+.stat-label { font-size: 10.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-value { font-size: 22px; font-family: var(--font-serif); font-weight: 400; }
 
 /* ── TABLE WRAPPER ── */
 .table-wrap {
@@ -405,20 +405,36 @@ tbody td { padding: 11px 14px; vertical-align: middle; white-space: nowrap; }
   <!-- STATS -->
   <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-label">Tổng booking</div>
+      <div class="stat-label">Tổng</div>
       <div class="stat-value" id="statTotal">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Chờ confirm</div>
+      <div class="stat-label">New Booking</div>
+      <div class="stat-value" id="statNew">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending Confirm</div>
       <div class="stat-value" id="statPending">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Đã confirm</div>
+      <div class="stat-label">Confirmed</div>
       <div class="stat-value" id="statConfirmed">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">DONE</div>
+      <div class="stat-label">Booking Confirmed</div>
+      <div class="stat-value" id="statBookingConfirmed">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Final Booking</div>
+      <div class="stat-value" id="statFinal">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Done</div>
       <div class="stat-value" id="statDone">–</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cancel</div>
+      <div class="stat-value" id="statCancel">–</div>
     </div>
   </div>
 
@@ -620,21 +636,34 @@ function renderTable(result) {
 
 // ── STATS ──
 function renderStats(rows) {
-  const counts = { total: rows.length, pending: 0, confirmed: 0, done: 0 };
+  const counts = {
+    total: rows.length,
+    new: 0, pending: 0, confirmed: 0,
+    bookingConfirmed: 0, final: 0, done: 0, cancel: 0
+  };
   rows.forEach(b => {
-    const s = String(b['Trạng thái'] || '').toLowerCase();
-    if (s.includes('chờ'))  counts.pending++;
-    else if (s.includes('đã confirm')) counts.confirmed++;
-    else if (s === 'done')  counts.done++;
+    const s = String(b['Trạng thái'] || '').trim();
+    if (s === 'New Booking')       counts.new++;
+    else if (s === 'Pending Confirm')   counts.pending++;
+    else if (s === 'Confirmed')         counts.confirmed++;
+    else if (s === 'Booking Confirmed') counts.bookingConfirmed++;
+    else if (s === 'Final Booking')     counts.final++;
+    else if (s === 'Done')              counts.done++;
+    else if (s === 'Cancel')            counts.cancel++;
   });
-  document.getElementById('statTotal').textContent     = counts.total;
-  document.getElementById('statPending').textContent   = counts.pending;
-  document.getElementById('statConfirmed').textContent = counts.confirmed;
-  document.getElementById('statDone').textContent      = counts.done;
+  document.getElementById('statTotal').textContent            = counts.total;
+  document.getElementById('statNew').textContent              = counts.new;
+  document.getElementById('statPending').textContent          = counts.pending;
+  document.getElementById('statConfirmed').textContent        = counts.confirmed;
+  document.getElementById('statBookingConfirmed').textContent = counts.bookingConfirmed;
+  document.getElementById('statFinal').textContent            = counts.final;
+  document.getElementById('statDone').textContent             = counts.done;
+  document.getElementById('statCancel').textContent           = counts.cancel;
 }
 
 function resetStats() {
-  ['statTotal','statPending','statConfirmed','statDone'].forEach(id => {
+  ['statTotal','statNew','statPending','statConfirmed',
+   'statBookingConfirmed','statFinal','statDone','statCancel'].forEach(id => {
     document.getElementById(id).textContent = '–';
   });
 }
