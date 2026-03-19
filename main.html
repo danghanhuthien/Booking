@@ -494,19 +494,25 @@ function getCurrentMonthName() {
   return mm + '.' + yy;
 }
 
-function buildMonthTabs(selected) {
-  // Tạo 3 tháng: tháng trước, hiện tại, tháng sau
-  const months = [];
-  const now = new Date();
-  for (let i = -1; i <= 1; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const yy = String(d.getFullYear()).slice(-2);
-    months.push(mm + '.' + yy);
+async function loadSheetTabs() {
+  try {
+    const res  = await fetch(`${API}?action=getSheets&token=${token}`);
+    const json = await res.json();
+    if (!json.success || !json.data.length) {
+      // Fallback: chỉ hiện tháng hiện tại
+      return [getCurrentMonthName()];
+    }
+    // Sort tháng tăng dần
+    return json.data.sort();
+  } catch(e) {
+    return [getCurrentMonthName()];
   }
+}
+
+function buildMonthTabs(sheets, selected) {
   const container = document.getElementById('monthTabs');
   container.innerHTML = '';
-  months.forEach(m => {
+  sheets.forEach(m => {
     const btn = document.createElement('button');
     btn.className = 'month-tab' + (m === selected ? ' active' : '');
     btn.textContent = m;
@@ -516,9 +522,11 @@ function buildMonthTabs(selected) {
 }
 
 // ── LOAD DATA ──
+let monthSheets = [];
+
 async function loadMonth(month) {
   currentMonth = month;
-  buildMonthTabs(month);
+  buildMonthTabs(monthSheets, month);
   document.getElementById('tableBody').innerHTML =
     `<tr><td colspan="10"><div class="loading-state">Đang tải<span class="dots"><span></span><span></span><span></span></span></div></td></tr>`;
   resetStats();
@@ -828,9 +836,13 @@ function showToast(msg, type = 'success') {
 }
 
 // ── BOOT ──
-(function init() {
-  const m = getCurrentMonthName();
-  loadMonth(m);
+(async function init() {
+  monthSheets = await loadSheetTabs();
+  // Chọn tab mặc định: tháng hiện tại nếu có, không thì tab cuối
+  const cur = getCurrentMonthName();
+  const defaultMonth = monthSheets.includes(cur) ? cur : monthSheets[monthSheets.length - 1];
+  buildMonthTabs(monthSheets, defaultMonth);
+  await loadMonth(defaultMonth);
 })();
 </script>
 </body>
