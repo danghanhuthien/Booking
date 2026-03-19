@@ -283,7 +283,23 @@ tbody td { padding: 11px 14px; vertical-align: middle; white-space: nowrap; }
   border-color: var(--text); background: var(--surface);
 }
 .form-input:disabled, .form-select:disabled, .form-textarea:disabled {
-  opacity: 0.45; cursor: not-allowed; background: var(--surface2);
+  opacity: 0.35; cursor: not-allowed;
+  background: var(--surface2); color: var(--muted); border-color: var(--border);
+}
+.form-input:not(:disabled), .form-select:not(:disabled), .form-textarea:not(:disabled) {
+  background: var(--surface);
+  border-color: #5A9FD4;
+  box-shadow: 0 0 0 3px rgba(29,78,216,0.07);
+}
+.form-input:not(:disabled):focus, .form-textarea:not(:disabled):focus {
+  border-color: var(--text); box-shadow: 0 0 0 3px rgba(26,25,23,0.09);
+}
+.form-label-editable { color: var(--text) !important; }
+.form-label-locked   { color: var(--muted); font-style: italic; }
+.field-wrap { position: relative; }
+.lock-icon {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 13px; height: 13px; opacity: 0.35; pointer-events: none;
 }
 .form-input::placeholder { color: #C4C2BB; }
 .form-textarea { height: 76px; padding: 10px 12px; resize: none; }
@@ -683,9 +699,11 @@ function buildForm(b) {
       input = `<input class="form-input" id="ff_${esc(colName)}" value="${escHtml(curVal)}" ${disAttr} placeholder="">`;
     }
 
+    const labelCls = editable ? 'form-label form-label-editable' : 'form-label form-label-locked'
+    const lockSvg  = editable ? '' : `<svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`
     return `<div class="form-field">
-      <label class="form-label">${escHtml(colName)}</label>
-      ${input}
+      <label class="${labelCls}">${escHtml(colName)}${editable ? ' <span style="color:#5A9FD4;font-size:10px">✎</span>' : ''}</label>
+      <div class="field-wrap">${input}${lockSvg}</div>
     </div>`;
   }).join('');
 
