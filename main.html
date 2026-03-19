@@ -688,15 +688,27 @@ function buildForm(b) {
     const isNum  = ['pax','twn','dbl','sgl','trp','guide room','số đêm','seat'].some(k => lower.includes(k));
     const isNote = lower === 'note' || lower === 'ghi chú';
 
+    const STATUS_OPTIONS = ['New booking','Chờ confirm','Đã confirm','Final booking','Đã final booking','DONE','CANCEL'];
+    const isStatus = colName === 'Trạng thái';
+    const isSale   = colName === 'SALE';
+
+    // SALE: tự gán từ displayName, readonly
+    const autoVal = isSale ? displayName : curVal;
+
     let input;
-    if (isNote) {
-      input = `<textarea class="form-textarea" id="ff_${esc(colName)}" ${disAttr} placeholder="...">${escHtml(curVal)}</textarea>`;
+    if (isStatus && editable) {
+      const opts = STATUS_OPTIONS.map(o =>
+        `<option value="${o}" ${autoVal === o ? 'selected' : ''}>${o}</option>`
+      ).join('');
+      input = `<select class="form-select" id="ff_${esc(colName)}">${opts}</select>`;
+    } else if (isNote) {
+      input = `<textarea class="form-textarea" id="ff_${esc(colName)}" ${disAttr} placeholder="...">${escHtml(autoVal)}</textarea>`;
     } else if (isDate) {
-      input = `<input class="form-input" type="date" id="ff_${esc(colName)}" value="${toInputDate(curVal)}" ${disAttr}>`;
+      input = `<input class="form-input" type="date" id="ff_${esc(colName)}" value="${toInputDate(autoVal)}" ${disAttr}>`;
     } else if (isNum) {
-      input = `<input class="form-input" type="number" id="ff_${esc(colName)}" value="${escHtml(curVal)}" ${disAttr} min="0" placeholder="0">`;
+      input = `<input class="form-input" type="number" id="ff_${esc(colName)}" value="${escHtml(autoVal)}" ${disAttr} min="0" placeholder="0">`;
     } else {
-      input = `<input class="form-input" id="ff_${esc(colName)}" value="${escHtml(curVal)}" ${disAttr} placeholder="">`;
+      input = `<input class="form-input" id="ff_${esc(colName)}" value="${escHtml(autoVal)}" ${disAttr} placeholder="">`;
     }
 
     const labelCls = editable ? 'form-label form-label-editable' : 'form-label form-label-locked'
@@ -730,6 +742,8 @@ async function submitForm() {
     const el = document.getElementById('ff_' + esc(colName));
     if (el && !el.disabled) data[colName] = el.value.trim();
   });
+  // SALE luôn gán từ người đang login (kể cả bị disabled)
+  if (allHeaders.includes('SALE')) data['SALE'] = displayName;
 
   try {
     let body;
